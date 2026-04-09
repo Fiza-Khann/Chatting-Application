@@ -1,0 +1,389 @@
+package chatting.application;
+
+import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.Font;
+import java.awt.Image;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.net.ServerSocket;
+import java.net.Socket;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.Statement;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+import javax.swing.*;
+import javax.swing.border.EmptyBorder;
+
+
+public class Server implements ActionListener {
+    JTextField text;
+    static JPanel a1;
+    static Box vertical = Box.createVerticalBox();
+    static JFrame f = new JFrame();
+    static DataOutputStream dout;
+    static JLabel connectionStatusLabel;
+    static JScrollPane scrollPane;
+
+    Server() {
+        f.setLayout(null);
+        f.setTitle("Chatme");
+        f.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        f.setResizable(false);
+        JPanel p1 = new JPanel();
+        p1.setBackground(Color.BLACK);
+        p1.setBounds(0, 0, 450, 70);
+        p1.setLayout(null);
+        f.add(p1);
+
+        connectionStatusLabel = new JLabel("<html><p style=\"width: 350px\">Waiting for the other user to be connected</p></html>");
+        connectionStatusLabel.setBounds(55, 75, 440, 570);
+        connectionStatusLabel.setFont(new Font("Helvetica", Font.PLAIN, 16));
+        connectionStatusLabel.setForeground(Color.RED);
+        f.add(connectionStatusLabel);
+
+        ImageIcon i1 = new ImageIcon(ClassLoader.getSystemResource("icons/3.png"));
+        Image i2 = i1.getImage().getScaledInstance(25, 25, Image.SCALE_DEFAULT);
+        ImageIcon i3 = new ImageIcon(i2);
+        JLabel back = new JLabel(i3);
+        back.setBounds(5, 20, 25, 25);
+        p1.add(back);
+
+        back.addMouseListener(new MouseAdapter() {
+            public void mouseClicked(MouseEvent ae) {
+                System.exit(0);
+            }
+        });
+
+        ImageIcon i4 = new ImageIcon(ClassLoader.getSystemResource("icons/zoha.jpg"));
+        Image i5 = i4.getImage().getScaledInstance(60, 60, Image.SCALE_DEFAULT);
+        ImageIcon i6 = new ImageIcon(i5);
+        JLabel profile = new JLabel(i6);
+        profile.setBounds(40, 10, 50, 50);
+        p1.add(profile);
+
+        ImageIcon i7 = new ImageIcon(ClassLoader.getSystemResource("icons/video.png"));
+        Image i8 = i7.getImage().getScaledInstance(30, 30, Image.SCALE_DEFAULT);
+        ImageIcon i9 = new ImageIcon(i8);
+        JLabel video = new JLabel(i9);
+        video.setBounds(300, 20, 30, 30);
+        p1.add(video);
+
+        ImageIcon i10 = new ImageIcon(ClassLoader.getSystemResource("icons/phone.png"));
+        Image i11 = i10.getImage().getScaledInstance(35, 30, Image.SCALE_DEFAULT);
+        ImageIcon i12 = new ImageIcon(i11);
+        JLabel phone = new JLabel(i12);
+        phone.setBounds(360, 20, 35, 30);
+        p1.add(phone);
+
+        ImageIcon i13 = new ImageIcon(ClassLoader.getSystemResource("icons/Dots.png"));
+        Image i14 = i13.getImage().getScaledInstance(30, 23, Image.SCALE_DEFAULT);
+        ImageIcon i15 = new ImageIcon(i14);
+        JLabel morevent = new JLabel(i15);
+        morevent.setBounds(420, 20, 10, 25);
+
+        morevent.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent ae) {
+                int confirm = JOptionPane.showConfirmDialog(f, "Are you sure you want to clear all messages?", "Clear Messages", JOptionPane.YES_NO_OPTION);
+                if (confirm == JOptionPane.YES_OPTION) {
+                    clearMessages();
+                }
+            }
+        });
+
+        p1.add(morevent);
+
+        JLabel name = new JLabel("Zoha");
+        name.setBounds(110, 15, 140, 20);
+        name.setForeground(Color.WHITE);
+        name.setFont(new Font("Helvetica", Font.BOLD, 16));
+        p1.add(name);
+
+        JLabel status = new JLabel("Active Now");
+        status.setBounds(110, 35, 100, 18);
+        status.setForeground(Color.WHITE);
+        status.setFont(new Font("Helvetica", Font.PLAIN, 16));
+        p1.add(status);
+
+        a1 = new JPanel();
+        a1.setBounds(5, 75, 440, 540);
+        a1.setBackground(Color.BLACK);
+        f.add(a1);
+
+        text = new JTextField();
+        text.setBounds(1, 620, 330, 40);
+        text.setFont(new Font("Helvetica", Font.PLAIN, 16));
+        text.setText("Type a message");
+
+        MouseAdapter profileClickListener = new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                ProfilePage profilePage = new ProfilePage("Zoha", i6, true);
+                profilePage.setVisible(true);
+            }
+        };
+        profile.addMouseListener(profileClickListener);
+        name.addMouseListener(profileClickListener);
+
+        text.addKeyListener(new KeyAdapter() {
+            @Override
+            public void keyReleased(KeyEvent e) {
+                if (text.getText().isEmpty()) {
+                    text.setText("Type a message");
+                }
+            }
+
+            public void keyTyped(KeyEvent e) {
+                if (text.getText().equals("Type a message")) {
+                    text.setText("");
+                }
+            }
+        });
+        f.add(text);
+
+        JButton send = new JButton("Send");
+        send.setBounds(330, 620, 70, 40);
+        send.setBackground(Color.BLACK);
+        send.setForeground(Color.WHITE);
+        send.addActionListener(this);
+        send.setFont(new Font("Helvetica", Font.PLAIN, 14));
+        f.add(send);
+
+        JButton emojiButton = new JButton("😊");
+        emojiButton.setBounds(400, 620, 50, 40);
+        emojiButton.setBackground(Color.BLACK);
+        emojiButton.setForeground(Color.WHITE);
+        emojiButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                EmojiPicker emojiPicker = new EmojiPicker(text);
+                emojiPicker.setVisible(true);
+            }
+        });
+        f.add(emojiButton);
+
+        scrollPane = new JScrollPane(a1);
+        scrollPane.setBounds(5, 75, 450, 540);
+        scrollPane.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS);
+        scrollPane.getVerticalScrollBar().addAdjustmentListener(e -> {
+            e.getAdjustable().setValue(e.getAdjustable().getMaximum());
+        });
+
+        f.add(scrollPane);
+
+        f.setSize(470, 700);
+        f.setLocation(200, 20);
+        f.getContentPane().setBackground(Color.BLACK);
+
+        f.setVisible(true);
+    }
+    
+    public void actionPerformed(ActionEvent ae) {
+        sendMessage();
+    }
+
+    private void sendMessage() {
+        try {
+            String out = text.getText();
+            JPanel p2 = formatLabel(out, true);
+            a1.setLayout(new BorderLayout());
+            JPanel right = new JPanel(new BorderLayout());
+            right.setBackground(Color.BLACK);
+            right.add(p2, BorderLayout.LINE_END);
+            vertical.add(right);
+            vertical.add(Box.createVerticalStrut(15));
+            a1.add(vertical, BorderLayout.PAGE_START);
+            dout.writeUTF(out);
+            text.setText("");
+            f.repaint();
+            f.revalidate();
+
+            try (Connection con = getConnection()) {
+                String query = "INSERT INTO messages (sender, message) VALUES (?, ?)";
+                PreparedStatement ps = con.prepareStatement(query);
+                ps.setString(1, "Server");
+                ps.setString(2, out);
+                ps.executeUpdate();
+            }
+
+            scrollPane.getVerticalScrollBar().setValue(scrollPane.getVerticalScrollBar().getMaximum());
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    private Connection getConnection() {
+        Connection con = null;
+        try {
+            String url = "jdbc:mysql://localhost:3306/chat_history";
+            String user = "root";
+            String password = "Chatapp@bse2c";
+            Class.forName("com.mysql.cj.jdbc.Driver");
+            con = DriverManager.getConnection(url, user, password);
+            System.out.println("Connection established successfully.");
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return con;
+    }
+
+   
+   public static JPanel formatLabel(String out, boolean sent) {
+    JPanel panel = new JPanel();
+    panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
+
+    JLabel output = new JLabel("<html><p style=\"width: 150px\">" + out + "</p></html>");
+    output.setFont(new Font("Helvetica", Font.PLAIN, 16));
+    output.setOpaque(true);
+    output.setBorder(new EmptyBorder(15, 15, 15, 50));
+
+    if (sent) {
+        output.setBackground(new Color(0, 150, 230));
+        panel.setBackground(Color.BLACK);
+    } else {
+        output.setBackground(Color.WHITE);
+        panel.setBackground(Color.BLACK);
+    }
+
+    panel.add(output);
+
+    Calendar cal = Calendar.getInstance();
+    SimpleDateFormat sdf = new SimpleDateFormat("HH:mm");
+
+    JLabel time = new JLabel();
+    time.setText(sdf.format(cal.getTime()));
+
+    panel.add(time);
+
+    return panel;
+}
+
+
+    private void clearMessages() {
+        a1.removeAll();
+        vertical.removeAll();
+        a1.revalidate();
+        a1.repaint();
+        f.revalidate();
+        f.repaint();
+
+        try (Connection con = getConnection()) {
+            String query = "DELETE FROM messages";
+            Statement stmt = con.createStatement();
+            stmt.executeUpdate(query);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+   public static void main(String[] args) {
+        Server server = new Server();
+        Connection testCon = server.getConnection(); 
+        if (testCon != null) {
+            System.out.println("Database connection successful!");
+        } else {
+            System.out.println("Failed to establish database connection.");
+        }
+
+        try {
+            ServerSocket skt = new ServerSocket(6666);
+            while (true) {
+                Socket s = skt.accept();
+                DataInputStream din = new DataInputStream(s.getInputStream());
+                dout = new DataOutputStream(s.getOutputStream());
+                connectionStatusLabel.setText("<html><p style=\"width: 350px\">Connection established successfully.<br>Now you can chat.</p></html>");
+                connectionStatusLabel.setForeground(new Color(0x44C826));
+                Timer timer = new Timer(3000, new ActionListener() {
+                    @Override
+                    public void actionPerformed(ActionEvent e) {
+                        connectionStatusLabel.setVisible(false);
+                        f.getContentPane().remove(connectionStatusLabel);
+                        f.revalidate();
+                    }
+                });
+                timer.setRepeats(false);
+                timer.start();
+
+                try (Connection con = server.getConnection()) {
+                    if (con != null) {
+                        String query = "SELECT sender, message FROM messages";
+                        Statement stmt = con.createStatement();
+                        ResultSet rs = stmt.executeQuery(query);
+                        while (rs.next()) {
+                            String sender = rs.getString("sender");
+                            String message = rs.getString("message");
+                            JPanel panel = null;
+                            if ("Server".equals(sender)) {
+                                panel = formatLabel(message, true); 
+                            } else if ("Client".equals(sender)){
+                                panel = formatLabel(message, false); 
+                            }
+                            JPanel right = new JPanel(new BorderLayout());
+                            JPanel left = new JPanel(new BorderLayout());
+                            right.setBackground(Color.BLACK);
+                            left.setBackground(Color.BLACK);
+                            if ("Server".equals(sender)) {
+                                right.add(panel, BorderLayout.LINE_END);
+                                vertical.add(right);
+                            } else if ("Client".equals(sender)){
+                                left.add(panel, BorderLayout.LINE_START);
+                                vertical.add(left);
+                            }
+                        }
+
+                    }
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+
+                while (true) {
+                    String msg;
+                    try {
+                        msg = din.readUTF();
+                        if (msg.equals("exit")) {
+                            JOptionPane.showMessageDialog(f, "Client has disconnected.");
+                            skt.close();
+                            break;
+                        }
+                    } catch (Exception e) {
+                        JOptionPane.showMessageDialog(f, "Client has disconnected.");
+                        skt.close();
+                        break;
+                    }
+                    JPanel panel = server.formatLabel(msg, false);
+                    JPanel left = new JPanel(new BorderLayout());
+                    left.setBackground(Color.BLACK);
+                    left.add(panel, BorderLayout.LINE_START);
+                    vertical.add(left);
+
+                    try (Connection con = server.getConnection()) {
+                        if (con != null) {
+                            String query = "INSERT INTO messages (sender, message) VALUES (?, ?)";
+                            PreparedStatement ps = con.prepareStatement(query);
+                            ps.setString(1, "Client");
+                            ps.setString(2, msg);
+                            ps.executeUpdate();
+                        }
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+
+                scrollPane.getVerticalScrollBar().setValue(scrollPane.getVerticalScrollBar().getMaximum());
+                f.validate();
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+}

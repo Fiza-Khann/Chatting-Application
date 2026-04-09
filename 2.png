@@ -1,0 +1,63 @@
+package chatting.application;
+
+import javax.swing.*;
+import java.awt.*;
+
+public class ProfilePage extends JFrame {
+    
+    public ProfilePage(String name, ImageIcon profilePic, boolean isOnline) {
+        setTitle("Profile Page");
+        setSize(300, 400);
+        setLocationRelativeTo(null);
+        setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+
+        JPanel profilePanel = new JPanel();
+        profilePanel.setLayout(new GridLayout(5, 1, 10, 10));
+        profilePanel.setBackground(Color.WHITE);
+
+        JLabel profilePictureLabel = new JLabel();
+        profilePictureLabel.setIcon(profilePic);
+        profilePictureLabel.setHorizontalAlignment(SwingConstants.CENTER);
+        profilePictureLabel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+
+        JLabel nameLabel = new JLabel("Name: " + name);
+        nameLabel.setHorizontalAlignment(SwingConstants.CENTER);
+        nameLabel.setOpaque(true);
+        nameLabel.setBackground(Color.WHITE);
+        nameLabel.setForeground(Color.BLACK);
+        nameLabel.setFont(new Font("Helvetica", Font.BOLD, 16));
+        nameLabel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+
+        JLabel emailLabel = new JLabel("Email: " + name.toLowerCase().replace(" ", ".") + "@bakar.com");
+        emailLabel.setHorizontalAlignment(SwingConstants.CENTER);
+        emailLabel.setOpaque(true);
+        emailLabel.setBackground(Color.WHITE);
+        emailLabel.setForeground(Color.BLACK);
+        emailLabel.setFont(new Font("Helvetica", Font.BOLD, 16));
+        emailLabel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+
+        JLabel phoneLabel = new JLabel("Phone: 03115168501");
+        phoneLabel.setHorizontalAlignment(SwingConstants.CENTER);
+        phoneLabel.setOpaque(true);
+        phoneLabel.setBackground(Color.WHITE);
+        phoneLabel.setForeground(Color.BLACK);
+        phoneLabel.setFont(new Font("Helvetica", Font.BOLD, 16));
+        phoneLabel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+
+        JLabel statusLabel = new JLabel(isOnline ? "Status: Online" : "Status: Offline");
+        statusLabel.setHorizontalAlignment(SwingConstants.CENTER);
+        statusLabel.setOpaque(true);
+        statusLabel.setBackground(Color.WHITE);
+        statusLabel.setForeground(isOnline ? Color.GREEN : Color.RED);
+        statusLabel.setFont(new Font("Helvetica", Font.BOLD, 16));
+        statusLabel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+
+        profilePanel.add(profilePictureLabel);
+        profilePanel.add(nameLabel);
+        profilePanel.add(emailLabel);
+        profilePanel.add(phoneLabel);
+        profilePanel.add(statusLabel);
+
+        add(profilePanel);
+    }
+}

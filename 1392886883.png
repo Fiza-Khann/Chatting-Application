@@ -1,0 +1,68 @@
+
+package chatting.application;
+
+import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.Dimension;
+import java.awt.FlowLayout;
+import java.awt.GridLayout;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import javax.swing.JButton;
+import javax.swing.JFrame;
+import javax.swing.JPanel;
+import javax.swing.JTextField;
+
+public class EmojiPicker extends JFrame implements ActionListener {
+
+    private final String[] emojis = {
+            "😊", "😂", "😍", "😎", "😋", "😇", "😜", "😔",
+            "😭", "😡", "😱", "😴", "😈", "👻", "👽", "💩"
+    };
+
+    private final JTextField textField;
+
+    public EmojiPicker(JTextField textField) {
+        this.textField = textField;
+        initialize();
+    }
+
+    private void initialize() {
+        setTitle("Emoji Picker");
+        setLayout(new BorderLayout());
+        setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+
+        JPanel emojiPanel = new JPanel(new GridLayout(4, 4, 5, 5));
+        emojiPanel.setBackground(Color.WHITE);
+        for (String emoji : emojis) {
+            JButton emojiButton = new JButton(emoji);
+            emojiButton.setPreferredSize(new Dimension(50, 50));
+            emojiButton.addActionListener(this);
+            emojiPanel.add(emojiButton);
+        }
+
+        JPanel footerPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+        JButton closeButton = new JButton("Close");
+        closeButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                dispose();
+            }
+        });
+        footerPanel.add(closeButton);
+
+        add(emojiPanel, BorderLayout.CENTER);
+        add(footerPanel, BorderLayout.SOUTH);
+
+        pack();
+        setLocationRelativeTo(null);
+    }
+
+    @Override
+    public void actionPerformed(ActionEvent e) {
+        JButton emojiButton = (JButton) e.getSource();
+        String emoji = emojiButton.getText();
+        textField.replaceSelection(emoji);
+    }
+
+}
